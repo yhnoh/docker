@@ -1,0 +1,46 @@
+version: "3.0"
+services:
+  mysql-service:
+      image: mysql:8.0
+      container_name: mysql-container
+      volumes:
+        - mysql_service_data:/var/mysql
+      restart: always
+      ports:
+        - "3306:3306"
+      networks:
+        - backend-net
+      environment:
+        MYSQL_ROOT_PASSWORD: 1234
+        MYSQL_DATABASE: wordpress
+        MYSQL_USER : wordpress
+        MYSQL_PASSWORD: 1234
+  wordpress-service:
+    depends_on:
+      - mysql-service
+    image: wordpress:5.7
+    container_name: wordpress-container
+    ports:
+      - "8888:80"
+    # backend-net으로 mysql-service와 동일한 네트워크를 지정
+    # 외부 연결을 위한 네트워크를 위해 frontend-net을 지정
+    # docker network connet ~ 명령으로 두 번째 네트워크를 추가하는 것과 같다.
+    networks:
+      - backend-net
+      - frontend-net
+    volumes:
+      - wordpress_service_data:/var/www/html
+      - ${PWD}/wordpress_service_log:/var/log
+    restart: always
+    environment:
+      WORDPRESS_DB_HOST: mysql-service
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: 1234
+      WORDPRESS_DB_NAME: wordpress
+
+networks:
+  frontend-net: {}
+  backend-net: {}
+volumes:
+  mysql_service_data: {}
+  wordpress_service_data: {}
