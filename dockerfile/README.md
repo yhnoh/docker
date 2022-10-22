@@ -1,28 +1,98 @@
 ### Dockerfile
+---
 
 - Dockerfile은 원하는 개발환경을 코드로 구성하여 이미지 또는 컨테이너를 제공한다.
     > IaC (Infrastructure as Code)는 인프라 구축을 코드화하여 개발한다.
+
 #### Dockerfile을 사용하는 이유
-- 수정사항이 생기면 Dockerfile 내부에서 코드를 수정하면 되기 때문에 변경에 유연하다.
+- 수정사항이 생기면 Dockerfile 내부에서 ***코드를 수정하면 되기 때문에 변경에 유연***하다.
 - 해당 변경사항을 서버에 반영하기 전에 변경된 이미지 또는 컨테이너를 먼저 로컬 PC에서 테스트가 가능하다.
+  - Dockerfile을 통해서 서버리스 애플리케이션 환경을 구축 가능하며, 해당 ***Dockerfile을 사용자들에게 공유할시 해당 사용자는 서버의 프로비저닝, 확장, 관리할 필요가 없다.***
 - 커맨드 기반으로 인프라를 구성시 사용자 실수가 발생할 수 있다. 서버가 많아질 수록 사용자 실수가 발생할 확률이 높다.
-- Dockerfile을 통해서 인프라 구축시 동일한 환경을 많은 서버에 배포할 수 있다.
-- 코드를 작성한 파일형식으로 되어있기 때문에 공유가 가능하다.
+- Dockerfile을 통해서 인프라 구축시 ***동일한 환경을 많은 서버에 배포***할 수 있다.
+- 코드를 작성한 파일형식으로 되어있기 때문에 ***공유가 가능***하다.
     - 형상 관리 시스템에서도 관리가 가능하기 때문에 변경 이력을 확인할 수 있다.
-- 
+
+
 
 #### Dockerfile 사용시 고려해야할 것들
+> Dockerfile을 효율적으로 작성하기 위해 기본적으로 빌드 시간, 이미지 크기, 재사용성, 보안, 유지보수 등을 고려해야한다.
 1. 경량의 컨테이너 서비스를 제공
-2. Dockerfile에 담기는 레이어를 최소화
+   - 경량의 가상화 서비스를 제공 및 빠른 컨테이너 배포를 위해서는 베이스 이미지도 해당 이미지의 지향점에 필요한 프로그램, 라이브러리, 실행파일만 보유해야 한다.
+   - ***애플리케이션에 필요한 추가 구성 요소를 포함시키는 경우 복잡성, 의존성 문제를 일으킬 수 있기 때문에 애플리케이션에 fit한 구성 요소만을 작성***해야 한다.
+2. Dockerfile에 담기는 레이어(계층)를 최소화
+   - 레이어 수가 많을수록 이미지를 생성하는 빌드 시간은 길어질 것이고, 파일 용량도 커지게 된다.
+   - 레이어 수를 줄일 수 있도록 Dockerfile 명령어 사용 방법을 정확히 알고 있어야 한다.
 3. 하나의 어플리케이션은 하나의 컨테이너에서 제공
+   - 하나의 컨테이너에 2개 이상의 애플리케이션을 설정하게 되면 애플리케이션의 결합성이 높고 확장성을 저해하게 된다.
+   - 하나의 컨테이너에 하나의 어플리케이션 동작은 ***컨테이너간의 독립성을 보장함과 동시에 어플리케이션 버전 관리, 소스 코드 모듈화 등에서 이점***이 있다.
 4. 캐시 기능을 활용
+    - Dockerfile을 통해서 이미지를 빌드하면 자동으로 각 명령어 단위로 캐싱한다.
+    - 동일한 명령의 실행은 이 캐싱을 통해 재사용되기 때문에 빌드 속도를 빠르게 한다.
+    - ***캐싱에 사용된 명령줄이 변경되면 기존 캐싱은 사용하지 못하고 다시 캐싱***이 이루어진다.
 5. IaC 환경 개발은 디렉터리 단위로
-6. 서버리스 환경으로 개발
+   - Dockerfile로 이미지 빌드 시 현재 위치로부터 하위 경로의 모든 디렉토리와 파일을 도커 컨텍스트에 저장한 뒤 작업이 진행된다.
+     - 이를 `빌드 컨텍스트`라고 한다.
+   - 따라서 ***이미지 빌드와 상관없는 파일이 포함되지 않도록 별도의 디렉터리를 생성한 뒤 독립된 환경에서 빌드가 이루어져야 빌드 성능에 도움***이 된다.
+
 
 ### Dockerfile 명령어
-|명령어|설명|비고|
-|---|---|---|
-|내용1|내용2|내용3|
+<table border="1">
+    <thead>
+        <tr>
+            <td>명령어</td>
+            <td>설명</td>
+            <td>사용방법</td>
+            <td>권장사항</td>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>FROM</td>
+            <td>
+            생성하려는 이미지의 베이스 이미지 지정으로 도커허브에서 제공하는 공식 이미지를 사용하는 것을 권장하며 이미지 태그는 도커 허브에서 여러 태그가 버전 정보처럼 제공된다.
+            </td>
+            <td>FROM ubuntu:20.04</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>MAINTAINER</td>
+            <td>
+            일반적으로 이미지를 빌드한 작성자 이름과 이메일을 작성한다.
+            </td>
+            <td>MAINTAINER yeongho.noh &lt;yhnoh@abc.com&gt;</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>LABEL</td>
+            <td>이미지 작성 목적으로 버전, 타이틀, 설명, 라이센스 정보 등을 작성한다. 1개 이상 작성이 가능하다.</td>
+            <td>
+                LABEL purpose = 'nginx for webserver'<br/>
+                LABEL version = 1.0 <br/>
+                LABEL description = 'web service application using nginx'|LABEL purpose = 'nginx for webserver'
+            </td>
+            <td>
+                LABEL purpose = 'nginx for webserver' \<br/>
+                &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;version = 1.0 \<br/>
+                &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;description = 'web service application using nginx'
+            </td>
+        </tr>
+        <tr>
+            <td>RUN</td>
+            <td>이미지 작성 목적으로 버전, 타이틀, 설명, 라이센스 정보 등을 작성한다. 1개 이상 작성이 가능하다.</td>
+            <td>
+                LABEL purpose = 'nginx for webserver'<br/>
+                LABEL version = 1.0 <br/>
+                LABEL description = 'web service application using nginx'|LABEL purpose = 'nginx for webserver'
+            </td>
+            <td>
+                LABEL purpose = 'nginx for webserver' \<br/>
+                &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;version = 1.0 \<br/>
+                &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;description = 'web service application using nginx'
+            </td>
+        </tr>        
+    </tbody>
+</table>
 
 
 ### 이미지 생성을 위한 Dockerfile 빌드
