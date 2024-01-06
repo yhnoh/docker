@@ -25,6 +25,3 @@ services:
       - ./certs/client:/certs/client:ro
     depends_on:
       - docker
-
-    
-  
